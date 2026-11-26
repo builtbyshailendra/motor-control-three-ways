@@ -2,21 +2,14 @@
 
     python scripts/step1_design.py      -> results/step1_design.txt, results/loop_bode.png
 """
-import sys
-from pathlib import Path
+import _setup  # noqa: F401
+import control as ct
+import matplotlib.pyplot as plt
+import numpy as np
 
-sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
-
-import control as ct  # noqa: E402
-import matplotlib  # noqa: E402
-
-matplotlib.use("Agg")
-import matplotlib.pyplot as plt  # noqa: E402
-import numpy as np  # noqa: E402
-
-from mct import design as d  # noqa: E402
-from mct import report  # noqa: E402
-from mct.params import CONTROLLER, MOTOR, SPECS, STEP  # noqa: E402
+from mct import design as d
+from mct import report
+from mct.params import CONTROLLER, MOTOR, SPECS, STEP
 
 
 def main():

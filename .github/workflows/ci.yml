@@ -10,7 +10,9 @@ permissions:
 jobs:
   test:
     runs-on: ubuntu-24.04
-    timeout-minutes: 20
+    timeout-minutes: 25
+    env:
+      MCT_REQUIRE_TOOLS: "1"  # a missing ngspice fails the tests instead of skipping them
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -18,9 +20,28 @@ jobs:
           python-version: "3.12"
           cache: pip
           cache-dependency-path: requirements.txt
-      - name: install
+      - name: install Python packages
         run: pip install -r requirements.txt
-      - name: tests
+
+      - name: install ngspice (Ubuntu packages)
+        run: |
+          sudo apt-get update -q
+          sudo apt-get install -y -q --no-install-recommends ngspice libngspice0
+          ngspice -v | head -3 || true
+          ls -l /usr/lib/x86_64-linux-gnu/libngspice*
+          # PySpice dlopens "libngspice.so"; the runtime package only ships libngspice.so.0
+          echo "NGSPICE_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libngspice.so.0" >> "$GITHUB_ENV"
+
+      - name: tests (python-control, ngspice)
         run: python -m pytest -q
-      - name: step 1 (python-control)
-        run: python scripts/step1_design.py
+      - name: measurements (every step)
+        run: python scripts/run_all.py
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: results
+          path: |
+            results/
+            build/**/*.log
+            build/**/deck.cir
+          retention-days: 14
