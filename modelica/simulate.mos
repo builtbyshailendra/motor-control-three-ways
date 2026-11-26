@@ -1,0 +1,21 @@
+// Simulate every model in MotorControl.mo and write one CSV per run.
+// Run from an empty build directory two levels below the repo root:
+//   mkdir -p build/modelica && cd build/modelica && omc ../../modelica/simulate.mos
+// Output: MotorControl.<Model>_res.csv with time, speed (motor.w) and armature voltage (motor.v).
+
+loadModel(Modelica, {"4.1.0"}); getErrorString();
+print("Modelica Standard Library " + getVersion(Modelica) + "\n");
+loadFile("../../modelica/MotorControl.mo"); getErrorString();
+
+// One output row per millisecond; tight tolerance so solver error is far below the 1 % check.
+// variableFilter is a regular expression; "\\." is a literal dot.
+simulate(MotorControl.SpeedLoop, stopTime = 3.0, numberOfIntervals = 3000, tolerance = 1e-8,
+         outputFormat = "csv", variableFilter = "time|motor\\.w|motor\\.v"); getErrorString();
+
+// The linear loop again at looser solver tolerances (1e-6 is omc's default), to see what limits agreement.
+simulate(MotorControl.SpeedLoop, stopTime = 3.0, numberOfIntervals = 3000, tolerance = 1e-6,
+         outputFormat = "csv", variableFilter = "time|motor\\.w|motor\\.v",
+         fileNamePrefix = "MotorControl.SpeedLoop_tol1e-6"); getErrorString();
+simulate(MotorControl.SpeedLoop, stopTime = 3.0, numberOfIntervals = 3000, tolerance = 1e-4,
+         outputFormat = "csv", variableFilter = "time|motor\\.w|motor\\.v",
+         fileNamePrefix = "MotorControl.SpeedLoop_tol1e-4"); getErrorString();

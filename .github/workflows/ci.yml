@@ -7,12 +7,15 @@ on:
 permissions:
   contents: read
 
+env:
+  OM_IMAGE: openmodelica/openmodelica:v1.27.1-minimal
+
 jobs:
   test:
     runs-on: ubuntu-24.04
     timeout-minutes: 25
     env:
-      MCT_REQUIRE_TOOLS: "1"  # a missing ngspice fails the tests instead of skipping them
+      MCT_REQUIRE_TOOLS: "1"  # a missing ngspice or omc fails the tests instead of skipping them
     steps:
       - uses: actions/checkout@v5
       - uses: actions/setup-python@v6
@@ -32,7 +35,22 @@ jobs:
           # PySpice dlopens "libngspice.so"; the runtime package only ships libngspice.so.0
           echo "NGSPICE_LIBRARY_PATH=/usr/lib/x86_64-linux-gnu/libngspice.so.0" >> "$GITHUB_ENV"
 
-      - name: tests (python-control, ngspice)
+      - name: OpenModelica (omc from the official image, behind a wrapper on PATH)
+        run: |
+          docker pull -q "$OM_IMAGE"
+          mkdir -p "$RUNNER_TEMP/bin" "$RUNNER_TEMP/omhome"
+          cat > "$RUNNER_TEMP/bin/omc" <<EOF
+          #!/usr/bin/env bash
+          exec docker run --rm -u "$(id -u):$(id -g)" -e HOME="$RUNNER_TEMP/omhome" -v "$RUNNER_TEMP/omhome:$RUNNER_TEMP/omhome" -v "$GITHUB_WORKSPACE:$GITHUB_WORKSPACE" -w "\$PWD" "$OM_IMAGE" omc "\$@"
+          EOF
+          chmod +x "$RUNNER_TEMP/bin/omc"
+          echo "$RUNNER_TEMP/bin" >> "$GITHUB_PATH"
+          cat "$RUNNER_TEMP/bin/omc"
+          "$RUNNER_TEMP/bin/omc" --version
+      - name: Modelica Standard Library
+        run: omc modelica/install_msl.mos
+
+      - name: tests (python-control, ngspice, OpenModelica)
         run: python -m pytest -q
       - name: measurements (every step)
         run: python scripts/run_all.py

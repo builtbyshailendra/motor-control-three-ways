@@ -1,0 +1,13 @@
+// CI step: make sure omc can load the Modelica Standard Library 4.1.0.
+// Run from the repo root:  omc modelica/install_msl.mos
+print("omc " + getVersion() + "\n");
+if loadModel(Modelica, {"4.1.0"}) then
+  print("MSL " + getVersion(Modelica) + " is already available\n");
+else
+  print("MSL 4.1.0 not found; installing it with the package manager\n");
+  getErrorString();
+  installPackage(Modelica, "4.1.0"); getErrorString();
+  loadModel(Modelica, {"4.1.0"}); getErrorString();
+  print("MSL " + getVersion(Modelica) + "\n");
+end if;
+getErrorString();
