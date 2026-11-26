@@ -1,0 +1,31 @@
+Step 2: op-amp circuit in ngspice via PySpice 1.5
+=================================================
+Measured: 2026-11-26 12:31 UTC, GitHub Actions run 45820217003 (commit 53fa84a), Linux-7.0.0-1020-azure-x86_64-with-glibc2.39
+
+Controller parts: Ri = 10 kohm, Ci = 2.50 uF (Ri*Ci = 25 ms = 1/ki), Rp2/Rp1 = 200k/10k (kp = 20)
+Op-amps: ideal VCVS, gain 1e+06; setpoint rises in 1 us
+Transient: step 0.001 s, max step 0.001 s, options {'reltol': 0.0001}
+Netlist: 25 elements (netlists/linear.cir)
+
+PySpice shared library: 3035 time points, 0.07 s wall time
+  against python-control: max error 0.0013 % of the setpoint at 0.291 s, rms 0.0008 %, at 3 s 0.00099 %
+  overshoot 1.707 %, settling 0.583 s, rise 0.384 s (python-control: 1.707 %, 0.583 s, 0.384 s)
+ngspice -b on the same deck: 3035 time points, 0.03 s wall time
+  against python-control: max error 0.0013 % of the setpoint at 0.291 s, rms 0.0008 %, at 3 s 0.00099 %
+  overshoot 1.707 %, settling 0.583 s, rise 0.384 s (python-control: 1.707 %, 0.583 s, 0.384 s)
+
+PySpice vs ngspice -b: max difference 4.93e-11 % of the setpoint
+Linear solver, shared library (stderr notice PySpice must not treat as an error): Using SPARSE 1.3 as Direct Linear Solver
+Linear solver, ngspice -b: Using SPARSE 1.3 as Direct Linear Solver
+
+What limits the agreement (PySpice, linear loop):
+ op-amp gain   reltol  max error  error at 3 s  10.01 V / gain
+       1e+03    1e-04   1.0816 %     0.96883 %       1.00100 %
+       1e+04    1e-04   0.1094 %     0.09877 %       0.10010 %
+       1e+05    1e-04   0.0111 %     0.00990 %       0.01001 %
+       1e+06    1e-04   0.0013 %     0.00099 %       0.00100 %
+       1e+08    1e-04   0.0003 %     0.00001 %       0.00001 %
+       1e+06    1e-03   0.0013 %     0.00099 %       0.00100 %
+       1e+06    1e-06   0.0013 %     0.00099 %       0.00100 %
+(reltol 1e-3 is ngspice's default. An op-amp integrator with open-loop gain A is a leaky
+ integrator with DC gain A, so the loop settles with error = 10.01 V / A.)

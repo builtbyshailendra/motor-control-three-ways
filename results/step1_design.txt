@@ -1,6 +1,6 @@
 Step 1: plant, PI design and discretisation (python-control 0.10.2)
 ===================================================================
-Measured: 2026-11-26 12:03 UTC, local, Windows-11-10.0.26300-SP0
+Measured: 2026-11-26 12:31 UTC, GitHub Actions run 45820217003 (commit 53fa84a), Linux-7.0.0-1020-azure-x86_64-with-glibc2.39
 
 Motor (CTMS): J=0.01 kg m^2, b=0.1 N m s, K=0.01 N m/A, R=1.0 ohm, L=0.5 H
 Plant W(s)/V(s) = 0.01 / (0.005 s^2 + 0.06 s + 0.1001)

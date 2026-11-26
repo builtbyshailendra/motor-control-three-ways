@@ -1,0 +1,28 @@
+Step 4: supply limit, windup and anti-windup (1 rad/s step, 5 s simulated)
+==========================================================================
+Measured: 2026-11-26 12:31 UTC, GitHub Actions run 45820217003 (commit 53fa84a), Linux-7.0.0-1020-azure-x86_64-with-glibc2.39
+
+The step needs 10.01 V at steady state; the PI asks for 20 V at t = 0 and up to 21.18 V without a limit.
+Anti-windup: dI/dt = ki*e + (u - v)/Tt, Tt = Ni*Ti = 0.9 * 0.5 s = 0.45 s (LimPID's default Ni)
+
+tool            case                                           overshoot  settling  peak at  max |u|  vs python-control
+python-control  no supply limit (linear)                          1.71 %   0.583 s  0.811 s  21.18 V                   
+python-control  +/-12 V, no anti-windup                          14.86 %   2.909 s  1.749 s  12.00 V                   
+python-control  +/-12 V, back-calculation (Tt = 0.45 s)           0.00 %   1.047 s  5.000 s  12.00 V                   
+ngspice         +/-12 V, no anti-windup                          14.86 %   2.908 s  1.749 s  12.00 V      3.0e-03 % max
+ngspice         +/-12 V, back-calculation (Tt = 0.45 s)           0.00 %   1.047 s  5.000 s  12.00 V      1.1e-03 % max
+OpenModelica    +/-12 V, no anti-windup                          14.86 %   2.909 s  1.749 s  12.00 V      7.0e-06 % max
+OpenModelica    +/-12 V, back-calculation (Tt = 0.45 s)           0.00 %   1.047 s  5.000 s  12.00 V      5.2e-06 % max
+OpenModelica    +/-12 V, LimPID with Ni = 1e9 (tracking off)     14.86 %   2.909 s  1.749 s  12.00 V      7.0e-06 % max
+
+(settling: last time outside the 2 % band; overshoot 0 and a peak at the end mean the speed rose monotonically; vs python-control: max |difference| from python-control's nonlinear run of the same case, % of the setpoint)
+
+Choosing Tt (python-control nonlinear model, same step):
+      Tt  overshoot  settling
+  0.05 s     0.00 %   1.895 s
+   0.1 s     0.00 %   1.850 s
+  0.25 s     0.00 %   1.605 s
+  0.45 s     0.00 %   1.047 s
+     1 s     5.57 %   1.916 s
+     2 s     9.66 %   2.338 s
+    none    14.86 %   2.909 s

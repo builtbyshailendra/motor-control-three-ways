@@ -1,0 +1,26 @@
+Step 3: physical model in OpenModelica (omc, Modelica Standard Library 4.1.0)
+=============================================================================
+Measured: 2026-11-26 12:31 UTC, GitHub Actions run 45820217003 (commit 53fa84a), Linux-7.0.0-1020-azure-x86_64-with-glibc2.39
+
+Model: MotorControl.SpeedLoop (Resistor, Inductor, RotationalEMF, Inertia, Damper, SpeedSensor; Step, Feedback, PI)
+Solver: DASSL (omc default), tolerance 1e-8, 3000 output intervals (1 ms)
+Rows in the linear CSV: 3002
+
+Speed against python-control: max error 0.00001 % of the setpoint at 1.155 s, rms 0.00000 %
+Armature voltage against python-control's kp*e + ki*integral(e): max error 0.00009 % of 10 V
+Overshoot 1.707 %, settling 0.583 s, rise 0.384 s
+
+Solver tolerance against agreement (linear loop):
+ tolerance    max error    rms error
+      1e-4    0.01565 %    0.00510 %
+      1e-6    0.00023 %    0.00009 %
+      1e-8    0.00001 %    0.00000 %
+
+omc time per run, from its SimulationResult records (compile = generated C to an executable):
+run                           compile  simulate   total
+SpeedLoop                      1.36 s   0.019 s  1.41 s
+SpeedLoopSaturated             1.39 s   0.023 s  1.44 s
+SpeedLoopAntiWindup            1.41 s   0.024 s  1.48 s
+SpeedLoopLimPIDNoTracking      1.40 s   0.024 s  1.47 s
+SpeedLoop_tol1e-6              1.36 s   0.019 s  1.40 s
+SpeedLoop_tol1e-4              1.36 s   0.019 s  1.40 s
