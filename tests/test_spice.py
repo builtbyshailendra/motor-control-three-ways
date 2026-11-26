@@ -20,6 +20,7 @@ def test_component_values_realise_the_pi():
     v = circuit.component_values()
     assert v["Ci"] == pytest.approx(2.5e-6)  # Ri*Ci = 1/ki = 25 ms
     assert v["Rp2"] / v["Rp1"] == pytest.approx(20)  # kp
+    assert v["Rt"] == pytest.approx(180e3)  # Rt*Ci = Tt = 0.45 s
 
 
 def test_mechanical_analog_elements():

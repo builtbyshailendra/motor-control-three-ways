@@ -1,0 +1,37 @@
+.title DC motor speed loop, saturated
+Vref r 0 PWL(0s 0V 1e-06s 1.0V)
+Etach ws 0 w 0 1
+Re1 r u1p 10000.0
+Re2 u1p 0 10000.0
+Re3 ws u1n 10000.0
+Re4 u1n e 10000.0
+Eu1 e 0 u1p u1n 1000000.0
+Ri e u2n 10000.0
+Ci u2n xn 2.5e-06
+Eu2 xn 0 0 u2n 1000000.0
+Rp1 e u3n 10000.0
+Rp2 u3n pn 200000.0
+Eu3 pn 0 0 u3n 1000000.0
+Rs1 pn u4n 10000.0
+Rs2 xn u4n 10000.0
+Rs3 u4n v 10000.0
+Eu4 v 0 0 u4n 1000000.0
+Bpwr va 0 v=min(max(V(v),-12),12)
+Ra va a1 1.0
+La a1 a2 0.5
+Vsense a2 a3 0
+Eemf a3 0 w 0 0.01
+Ftorque 0 w Vsense 0.01
+CJ w 0 0.01
+Rb w 0 10.0
+.options reltol=0.0001
+.tran 0.001 5 0 0.001
+.control
+run
+set wr_singlescale
+set wr_vecnames
+option numdgt=12
+wrdata saturated.txt v(w) v(va)
+quit
+.endc
+.end

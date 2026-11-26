@@ -53,4 +53,47 @@ package MotorControl "One DC-motor speed loop (CTMS example) as a physical model
     connect(pi.y, motor.v);
     annotation(experiment(StartTime = 0, StopTime = 3, Interval = 0.001, Tolerance = 1e-08));
   end SpeedLoop;
+
+  model SpeedLoopSaturated "PI, then a +/-12 V supply limit; nothing stops the integrator winding up"
+    parameter Real kp = 20 "Proportional gain, V per rad/s";
+    parameter Real ki = 40 "Integral gain, V per rad";
+    parameter Modelica.Units.SI.AngularVelocity wRef = 1 "Setpoint step";
+    parameter Modelica.Units.SI.Voltage vMax = 12 "Supply limit";
+    Modelica.Blocks.Sources.Step setpoint(height = wRef, startTime = 0);
+    Modelica.Blocks.Math.Feedback error;
+    Modelica.Blocks.Continuous.PI pi(k = kp, T = kp / ki,
+      initType = Modelica.Blocks.Types.Init.InitialState, x_start = 0);
+    Modelica.Blocks.Nonlinear.Limiter supply(uMax = vMax, uMin = -vMax);
+    Motor motor;
+  equation
+    connect(setpoint.y, error.u1);
+    connect(motor.w, error.u2);
+    connect(error.y, pi.u);
+    connect(pi.y, supply.u);
+    connect(supply.y, motor.v);
+    annotation(experiment(StartTime = 0, StopTime = 5, Interval = 0.001, Tolerance = 1e-08));
+  end SpeedLoopSaturated;
+
+  model SpeedLoopAntiWindup "LimPID as a PI with its built-in anti-windup (back-calculation)"
+    parameter Real kp = 20 "Proportional gain, V per rad/s";
+    parameter Real ki = 40 "Integral gain, V per rad";
+    parameter Modelica.Units.SI.AngularVelocity wRef = 1 "Setpoint step";
+    parameter Modelica.Units.SI.Voltage vMax = 12 "Supply limit";
+    parameter Real Ni = 0.9 "Tracking time constant is Ni*Ti (LimPID's default 0.9)";
+    Modelica.Blocks.Sources.Step setpoint(height = wRef, startTime = 0);
+    Modelica.Blocks.Continuous.LimPID pid(
+      controllerType = Modelica.Blocks.Types.SimpleController.PI,
+      k = kp, Ti = kp / ki, yMax = vMax, yMin = -vMax, Ni = Ni,
+      initType = Modelica.Blocks.Types.Init.InitialState, xi_start = 0);
+    Motor motor;
+  equation
+    connect(setpoint.y, pid.u_s);
+    connect(motor.w, pid.u_m);
+    connect(pid.y, motor.v);
+    annotation(experiment(StartTime = 0, StopTime = 5, Interval = 0.001, Tolerance = 1e-08));
+  end SpeedLoopAntiWindup;
+
+  model SpeedLoopLimPIDNoTracking "The same LimPID with tracking made negligible: should wind up like SpeedLoopSaturated"
+    extends SpeedLoopAntiWindup(Ni = 1e9);
+  end SpeedLoopLimPIDNoTracking;
 end MotorControl;

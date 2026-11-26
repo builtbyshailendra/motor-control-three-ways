@@ -19,6 +19,9 @@ SCRIPT = REPO / "modelica" / "simulate.mos"
 
 MODELS = {
     "linear": "SpeedLoop",
+    "saturated": "SpeedLoopSaturated",
+    "antiwindup": "SpeedLoopAntiWindup",
+    "limpid_no_tracking": "SpeedLoopLimPIDNoTracking",
     "linear_tol1e-6": "SpeedLoop_tol1e-6",  # the same linear model at looser solver tolerances
     "linear_tol1e-4": "SpeedLoop_tol1e-4",
 }

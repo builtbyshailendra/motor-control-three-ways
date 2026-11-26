@@ -6,6 +6,7 @@ import _setup  # noqa: F401
 import step1_design
 import step2_spice
 import step3_modelica
+import step4_windup
 
 from mct import modelica, spice
 
@@ -19,3 +20,4 @@ if __name__ == "__main__":
         step3_modelica.main()
     else:
         print("omc not installed: step 3 skipped")
+    step4_windup.main()

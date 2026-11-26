@@ -14,30 +14,33 @@ Controller, op-amps as ideal high-gain VCVS (gain 1e6), all 10 kohm unless noted
     U2    inverting integrator, Ri Ci     xn = -(1/(Ri Ci)) * integral(e)       Ri Ci = 1/ki
     U3    inverting amplifier             pn = -(Rp2/Rp1) * e                   Rp2/Rp1 = kp
     U4    inverting summer                v  = -(pn + xn) = kp*e + ki*integral(e)
-    power stage: u = v (an ideal unity buffer)
+    power stage: u = v (linear) or u = clip(v, +/-12 V) (B source)
+Anti-windup: an ideal difference amplifier makes d = u - v and a resistor Rt feeds it
+into U2's summing node, so dI/dt = ki*e + (u - v)/(Rt Ci): back-calculation with
+Tt = Rt*Ci, the same law as Modelica's LimPID and mct.nonlinear.
 """
 from __future__ import annotations
 
 from PySpice.Spice.Netlist import Circuit
 
-from .params import CONTROLLER, MOTOR, STEP, T_END, Motor, PI
+from .params import CONTROLLER, MOTOR, STEP, T_END, T_WINDUP, TT, V_SUPPLY, Motor, PI
 
-MODES = ("linear",)
+MODES = ("linear", "saturated", "antiwindup")
 R0 = 10e3  # ohm, the base resistor of every op-amp stage
 OPAMP_GAIN = 1e6
 RISE = 1e-6  # s, the setpoint source's rise time (an ideal step can't be a SPICE source)
 
 
-def component_values(c: PI = CONTROLLER) -> dict:
+def component_values(c: PI = CONTROLLER, tt: float = TT) -> dict:
     ci = 1 / (c.ki * R0)
-    return {"Ri": R0, "Ci": ci, "Rp1": R0, "Rp2": c.kp * R0}
+    return {"Ri": R0, "Ci": ci, "Rp1": R0, "Rp2": c.kp * R0, "Rt": tt / ci}
 
 
 def build(mode: str = "linear", step: float = STEP, m: Motor = MOTOR, c: PI = CONTROLLER,
-          opamp_gain: float = OPAMP_GAIN) -> Circuit:
+          vmax: float = V_SUPPLY, tt: float = TT, opamp_gain: float = OPAMP_GAIN) -> Circuit:
     if mode not in MODES:
         raise ValueError(f"mode must be one of {MODES}")
-    v = component_values(c)
+    v = component_values(c, tt)
     gnd = 0
     cir = Circuit(f"DC motor speed loop, {mode}")
 
@@ -72,7 +75,14 @@ def build(mode: str = "linear", step: float = STEP, m: Motor = MOTOR, c: PI = CO
     opamp("u4", gnd, "u4n", "v")
 
     # power stage
-    cir.VCVS("pwr", "va", gnd, "v", gnd, 1)
+    if mode == "linear":
+        cir.VCVS("pwr", "va", gnd, "v", gnd, 1)
+    else:
+        cir.BehavioralSource("pwr", "va", gnd,
+                             voltage_expression=f"min(max(V(v),{-vmax:g}),{vmax:g})")
+    if mode == "antiwindup":
+        cir.VCVS("trk", "d", gnd, "va", "v", 1)  # d = u - v
+        cir.R("t", "d", "u2n", v["Rt"])
 
     # motor, electrical side
     cir.R("a", "va", "a1", m.R)
@@ -96,7 +106,7 @@ def netlist(mode: str = "linear", **kw) -> str:
 
 
 TRAN = {"step": 1e-3, "max_step": 1e-3}
-STOP = {"linear": T_END}
+STOP = {"linear": T_END, "saturated": T_WINDUP, "antiwindup": T_WINDUP}
 OPTIONS = {"reltol": 1e-4}
 
 
