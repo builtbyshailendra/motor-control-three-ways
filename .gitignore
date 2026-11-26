@@ -1,0 +1,9 @@
+__pycache__/
+*.pyc
+.pytest_cache/
+build/
+*.egg-info/
+# raw solver output stays out of git; results/ holds the summaries
+*.raw
+*_res.csv
+*_res.mat

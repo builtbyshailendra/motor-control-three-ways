@@ -1,0 +1,6 @@
+control==0.10.2
+numpy==2.5.5
+scipy==1.18.1
+matplotlib==3.11.2
+PySpice==1.5
+pytest==9.2.0

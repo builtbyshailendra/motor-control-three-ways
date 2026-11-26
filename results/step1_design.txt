@@ -1,0 +1,28 @@
+Step 1: plant, PI design and discretisation (python-control 0.10.2)
+===================================================================
+Measured: 2026-11-26 12:03 UTC, local, Windows-11-10.0.26300-SP0
+
+Motor (CTMS): J=0.01 kg m^2, b=0.1 N m s, K=0.01 N m/A, R=1.0 ohm, L=0.5 H
+Plant W(s)/V(s) = 0.01 / (0.005 s^2 + 0.06 s + 0.1001)
+Open-loop poles: -9.9975, -2.0025 rad/s (time constants 100.0 ms, 499.4 ms)
+DC gain: 0.09990 rad/s per V, so 1 rad/s needs 10.01 V
+Open-loop 1 V step: rise (10-90 %) 1.133 s, settling (2 %) 2.056 s
+
+PI: kp=20.0 V per rad/s, ki=40.0 V per rad (Ti = 0.5 s); zero at s = -2, on the slow motor pole
+Closed-loop poles: -5.0008+3.8762j, -5.0008-3.8762j, -1.9983+0.0000j
+Gain margin: infinite (phase never reaches -180 deg)
+Phase margin: 69.49 deg at 3.746 rad/s
+
+Closed-loop 1.0 rad/s step on a 1 ms grid (python-control step_info, 2 % band):
+  overshoot 1.71 %  (spec < 5.0 %)
+  settling  0.583 s  (spec < 2.0 s)
+  rise      0.384 s, peak 1.0171 rad/s at 0.811 s
+  error at 3 s 0.0003 %  (spec < 1.0 %; the integrator makes it zero in the limit)
+
+Discretised: PI by Tustin, plant by zero-order hold; closed-loop step against the continuous one
+ sample time       PI numerator  max diff  overshoot  settling  gain margin  phase margin
+        1 ms   20.020 z -19.980   0.093 %     1.74 %   0.581 s     54.0 dB     69.38 deg
+       10 ms   20.200 z -19.800   0.940 %     2.11 %   0.850 s     34.2 dB     68.42 deg
+       50 ms   21.000 z -19.000   4.835 %     4.30 %   1.000 s     20.9 dB     64.24 deg
+      100 ms   22.000 z -18.000  10.067 %     8.06 %   1.000 s     15.9 dB     59.26 deg
+(PI denominator z - 1 in every case; the gain margin is finite once sampled)

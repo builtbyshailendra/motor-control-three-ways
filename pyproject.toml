@@ -1,0 +1,12 @@
+[project]
+name = "motor-control-three-ways"
+version = "0.1.0"
+description = "One DC-motor speed loop in python-control, ngspice (via PySpice) and OpenModelica, checked against each other"
+requires-python = ">=3.12"
+dependencies = ["control==0.10.2", "numpy==2.5.5", "scipy==1.18.1", "matplotlib==3.11.2", "PySpice==1.5"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["."]
+addopts = "-ra"
+filterwarnings = ["ignore::DeprecationWarning"]
